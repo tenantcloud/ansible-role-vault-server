@@ -1,0 +1,4 @@
+---
+# defaults file for tenantcloud.vault_server
+
+vault_version: "1.4.2"

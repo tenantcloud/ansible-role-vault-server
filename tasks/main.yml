@@ -1,2 +1,3 @@
 ---
-# tasks file for tenantcloud.vault_server
+- include: install-vault.yml
+- include: install-certbot.yml

@@ -14,11 +14,11 @@ Role Variables
 --------------
 
 ansible_user: "ubuntu" os username
-vault_version: ""
-vault_domain: ""
-vault_work_dir: ""
-vault_service_dir: ""
-letsencrypt_email: ""
+vault_version:
+vault_domain:
+vault_work_dir:
+vault_service_dir:
+letsencrypt_email:
 
 Dependencies
 ------------

@@ -1,7 +1,7 @@
 ---
 - name: Create vault directory
   file:
-    path: {{ vault_work_dir }}
+    path: /etc/{{ vault_work_dir }}
     state: directory
     mode: 0777
   become: true
@@ -9,7 +9,7 @@
 - name: Copy vault.service file to server
   template:
     src: vault.service.j2
-    dest: {{ vault_service_dir }}/vault.service
+    dest: /etc/systemd/system/vault.service
     owner: root
     group: root
   changed_when: false
@@ -17,7 +17,7 @@
 - name: Copy vault server config file
   template:
     src: config.json.j2
-    dest: {{ vault_work_dir }}/config.json
+    dest: /etc/{{ vault_work_dir }}/config.json
   changed_when: false
 
 - name: Start service vault
@@ -35,7 +35,7 @@
 
 - name: Add vault root token key
   set_fact:
-    root_token: "{{ vault_keys.root_token }}"
+    vault_root_token: "{{ vault_keys.root_token }}"
 
 - name: Add vault unseal keys
   set_fact:
@@ -43,10 +43,31 @@
   loop: "{{ vault_keys.keys_base64 }}"
 
 - name: Save vault root token key in file
-  shell: "echo 'root_token: {{ root_token }}' >> {{ vault_work_dir }}/token_key.txt"
+  shell: "echo 'vault_root_token: {{ vault_root_token }}' >> /etc/{{ vault_work_dir }}/vault_root_token.txt"
 
 - name: Unseal vault
   hashivault_unseal:
     url: "https://{{ vault_domain }}:8200"
     keys: '{{item}}'
   loop: "{{ unseal_keys }}"
+
+- name: Create secret engine for dev
+  hashivault_secret_engine:
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_dev_secret_engine }}"
+    backend: kv-v2
+
+- name: Create secret engine for dashboard
+  hashivault_secret_engine:
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_dashboard_secret_engine }}"
+    backend: kv-v2
+
+- name: Create secret engine for promo
+  hashivault_secret_engine:
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_promo_secret_engine }}"
+    backend: kv-v2

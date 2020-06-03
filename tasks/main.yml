@@ -1,3 +1,4 @@
 ---
 - include: install-vault.yml
 - include: install-certbot.yml
+- include: configure-vault.yml

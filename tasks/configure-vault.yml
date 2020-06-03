@@ -1,0 +1,52 @@
+---
+- name: Create vault directory
+  file:
+    path: {{ vault_work_dir }}
+    state: directory
+    mode: 0777
+  become: true
+
+- name: Copy vault.service file to server
+  template:
+    src: vault.service.j2
+    dest: {{ vault_service_dir }}/vault.service
+    owner: root
+    group: root
+  changed_when: false
+
+- name: Copy vault server config file
+  template:
+    src: config.json.j2
+    dest: {{ vault_work_dir }}/config.json
+  changed_when: false
+
+- name: Start service vault
+  become: true
+  command: systemctl start vault.service
+
+- name: Enable service vault
+  become: true
+  command: systemctl enable vault.service
+
+- name: Initialize vault
+  hashivault_init:
+    url: "https://{{ vault_domain }}:8200"
+  register: vault_keys
+
+- name: Add vault root token key
+  set_fact:
+    root_token: "{{ vault_keys.root_token }}"
+
+- name: Add vault unseal keys
+  set_fact:
+    unseal_keys: "{{ unseal_keys + [item] }}"
+  loop: "{{ vault_keys.keys_base64 }}"
+
+- name: Save vault root token key in file
+  shell: "echo 'root_token: {{ root_token }}' >> {{ vault_work_dir }}/token_key.txt"
+
+- name: Unseal vault
+  hashivault_unseal:
+    url: "https://{{ vault_domain }}:8200"
+    keys: '{{item}}'
+  loop: "{{ unseal_keys }}"

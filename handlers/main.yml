@@ -1,2 +1,8 @@
 ---
 # handlers file for tenantcloud.vault_server
+
+- name: start service vault
+  systemd:
+    name: vault
+    state: started
+    enabled: yes

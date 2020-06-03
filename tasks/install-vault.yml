@@ -16,3 +16,12 @@
     path: $HOME/vault_{{ vault_version }}_linux_amd64.zip
     state: absent
   become: false
+
+- name: Install ansible, ansible-modules-hashivault
+  pip:
+    name:
+      - ansible
+      - ansible-modules-hashivault
+    extra_args: --upgrade
+    executable: /usr/bin/pip3
+  become: true

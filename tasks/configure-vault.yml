@@ -104,6 +104,16 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
 
+- name: Get auth list
+  hashivault_auth_list:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  register: hashivault_auth_list
+
+- name: Get mount_accessor
+  set_fact:
+    userpass_mount_accessor: "{{ hashivault_auth_list | json_query('backends.\"userpass/\".accessor') }}"
+
 - name: Create users for devops(token)
   hashivault_identity_entity:
     name: "{{ item.username }}"
@@ -128,6 +138,7 @@
   hashivault_identity_entity_alias:
     name: "{{ item.username }}"
     entity_name: "{{ item.username }}"
+    mount_accessor: "{{ userpass_mount_accessor }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_devops }}"
@@ -154,6 +165,7 @@
   hashivault_identity_entity_alias:
     name: "{{ item.username }}"
     entity_name: "{{ item.username }}"
+    mount_accessor: "{{ userpass_mount_accessor }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_servers }}"
@@ -180,6 +192,7 @@
   hashivault_identity_entity_alias:
     name: "{{ item.username }}"
     entity_name: "{{ item.username }}"
+    mount_accessor: "{{ userpass_mount_accessor }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_dev }}"

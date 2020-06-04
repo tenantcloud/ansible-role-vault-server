@@ -84,41 +84,115 @@
     name: "{{ vault_promo_secret_engine }}"
     backend: kv-v2
 
-- name: Create policy for dev
-  hashivault_policy_set_from_file:
-    url: "https://{{ vault_domain }}:8200"
-    token: "{{ vault_root_token }}"
-    name: dev
-    rules_file: /etc/{{ vault_work_dir }}/dev.hcl
-
 - name: Create policy for servers
   hashivault_policy_set_from_file:
     url: "https://{{ vault_domain }}:8200"
     token: "{{ vault_root_token }}"
-    name: servers
+    name: "{{ vault_policy_servers }}"
     rules_file: /etc/{{ vault_work_dir }}/servers.hcl
 
-- name: Create group for dev
-  hashivault_identity_group:
-    name: 'dev'
+- name: Create policy for dev
+  hashivault_policy_set_from_file:
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_dev }}"
+    rules_file: /etc/{{ vault_work_dir }}/dev.hcl
+
+- name: Create users for devops
+  hashivault_identity_entity:
+    name: "{{ item.username }}"
+    password: "{{ item.password }}"
     policies:
-      - 'dev'
+      - "{{ vault_policy_dev }}"
+      - "{{ vault_policy_servers }}"
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_devops }}"
+  register: users_for_devops
+
+- name: Create users alias for devops
+  hashivault_identity_entity_alias:
+    name: "{{ item.username }}"
+    entity_name: "{{ item.username }}"
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_devops }}"
+
+- name: Create users for servers
+  hashivault_identity_entity:
+    name: "{{ item.username }}"
+    password: "{{ item.password }}"
+    policies: "{{ vault_policy_servers }}"
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_servers }}"
+  register: users_for_servers
+
+- name: Create users alias for servers
+  hashivault_identity_entity_alias:
+    name: "{{ item.username }}"
+    entity_name: "{{ item.username }}"
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_servers }}"
+
+- name: Create users for dev
+  hashivault_identity_entity:
+    name: "{{ item.username }}"
+    password: "{{ item.password }}"
+    policies: "{{ vault_policy_dev }}"
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_dev }}"
+  register: users_for_dev
+
+- name: Create users alias for dev
+  hashivault_identity_entity_alias:
+    name: "{{ item.username }}"
+    entity_name: "{{ item.username }}"
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_dev }}"
+
+- name: Get devops_id keys
+  set_fact:
+    devops_id: "{{ devops_id + [item] }}"
+  loop: "{{ users_for_devops | json_query('results[*].data.id') }}"
+
+- name: Get servers_id keys
+  set_fact:
+    servers_id: "{{ servers_id + [item] }}"
+  loop: "{{ users_for_servers | json_query('results[*].data.id') }}"
+
+- name: Get dev_id keys
+  set_fact:
+    dev_id: "{{ dev_id + [item] }}"
+  loop: "{{ users_for_dev | json_query('results[*].data.id') }}"
+
+- name: Create group for devops
+  hashivault_identity_group:
+    name: "{{ vault_policy_devops }}"
+    policies:
+      - "{{ vault_policy_dev }}"
+      - "{{ vault_policy_servers }}"
+    member_entity_ids: "{{ devops_id }}"
     url: "https://{{ vault_domain }}:8200"
     token: "{{ vault_root_token }}"
 
 - name: Create group for servers
   hashivault_identity_group:
-    name: 'servers'
+    name: "{{ vault_policy_servers }}"
     policies:
-      - 'servers'
+      - "{{ vault_policy_servers }}"
+    member_entity_ids: "{{ servers_id }}"
     url: "https://{{ vault_domain }}:8200"
     token: "{{ vault_root_token }}"
 
-- name: Create group for devops
+- name: Create group for dev
   hashivault_identity_group:
-    name: 'devops'
+    name: "{{ vault_policy_dev }}"
     policies:
-      - 'dev'
-      - 'servers'
+      - "{{ vault_policy_dev }}"
+    member_entity_ids: "{{ dev_id }}"
     url: "https://{{ vault_domain }}:8200"
     token: "{{ vault_root_token }}"

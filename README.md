@@ -21,6 +21,13 @@ letsencrypt_email:
 vault_dev_secret_engine:
 vault_dashboard_secret_engine:
 vault_promo_secret_engine:
+vault_policy_devops:
+vault_policy_servers:
+vault_policy_dev:
+unseal_keys: []
+devops_id: []
+servers_id: []
+dev_id: []
 
 Dependencies
 ------------
@@ -44,6 +51,18 @@ Example Playbook
         vault_dev_secret_engine: ""
         vault_dashboard_secret_engine: ""
         vault_promo_secret_engine: ""
+        vault_policy_devops: ""
+        vault_policy_servers: ""
+        vault_policy_dev: ""
+        vault_users_devops:
+          - username: ""
+            password: ""
+        vault_users_servers:
+          - username: ""
+            password: ""
+        vault_users_dev:
+          - username: ""
+            password: ""
       roles:
         - tenantcloud.vault_server
 

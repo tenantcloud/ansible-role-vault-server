@@ -17,8 +17,10 @@ ansible_user: "ubuntu" os username
 vault_version:
 vault_domain:
 vault_work_dir:
-vault_service_dir:
 letsencrypt_email:
+vault_dev_secret_engine:
+vault_dashboard_secret_engine:
+vault_promo_secret_engine:
 
 Dependencies
 ------------
@@ -39,6 +41,9 @@ Example Playbook
         vault_work_dir: ""
         vault_service_dir: ""
         letsencrypt_email: ""
+        vault_dev_secret_engine: ""
+        vault_dashboard_secret_engine: ""
+        vault_promo_secret_engine: ""
       roles:
         - tenantcloud.vault_server
 

@@ -6,7 +6,7 @@
     mode: 0777
   become: true
 
-- name: Copy vault.service file to server
+- name: Copy vault service file to server
   template:
     src: vault.service.j2
     dest: /etc/systemd/system/vault.service
@@ -14,10 +14,22 @@
     group: root
   changed_when: false
 
-- name: Copy vault server config file
+- name: Copy vault server config file to server
   template:
     src: config.json.j2
     dest: /etc/{{ vault_work_dir }}/config.json
+  changed_when: false
+
+- name: Copy vault server dev policy file to server
+  template:
+    src: dev.hcl.j2
+    dest: /etc/{{ vault_work_dir }}/dev.hcl
+  changed_when: false
+
+- name: Copy vault server servers policy file to server
+  template:
+    src: servers.hcl.j2
+    dest: /etc/{{ vault_work_dir }}/servers.hcl
   changed_when: false
 
 - name: Start service vault
@@ -71,3 +83,42 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_promo_secret_engine }}"
     backend: kv-v2
+
+- name: Create policy for dev
+  hashivault_policy_set_from_file:
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+    name: dev
+    rules_file: /etc/{{ vault_work_dir }}/dev.hcl
+
+- name: Create policy for servers
+  hashivault_policy_set_from_file:
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+    name: servers
+    rules_file: /etc/{{ vault_work_dir }}/servers.hcl
+
+- name: Create group for dev
+  hashivault_identity_group:
+    name: 'dev'
+    policies:
+      - 'dev'
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+
+- name: Create group for servers
+  hashivault_identity_group:
+    name: 'servers'
+    policies:
+      - 'servers'
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"
+
+- name: Create group for devops
+  hashivault_identity_group:
+    name: 'devops'
+    policies:
+      - 'dev'
+      - 'servers'
+    url: "https://{{ vault_domain }}:8200"
+    token: "{{ vault_root_token }}"

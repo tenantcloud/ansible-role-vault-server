@@ -1,11 +1,11 @@
 ---
 galaxy_info:
-  role_name: vault
+  role_name: vault_server
   author: Igor Bronovskyi
   description: Setup vault server on linux
   company: "TenantCloud LLC"
 
-  issue_tracker_url: https://github.com/tenantcloud/ansible-role-vault/issues
+  issue_tracker_url: https://github.com/tenantcloud/ansible-role-vault-server/issues
 
   license: BSD
 

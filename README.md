@@ -16,6 +16,7 @@ Role Variables
 ansible_user: "ubuntu" os username
 vault_version:
 vault_domain:
+vault_url:
 vault_work_dir:
 letsencrypt_email:
 vault_dev_secret_engine:
@@ -24,6 +25,7 @@ vault_promo_secret_engine:
 vault_policy_devops:
 vault_policy_servers:
 vault_policy_dev:
+vault_authtype:
 unseal_keys: []
 devops_id: []
 servers_id: []
@@ -45,6 +47,7 @@ Example Playbook
         ansible_user: "ubuntu"
         vault_version: ""
         vault_domain: ""
+        vault_url: ""
         vault_work_dir: ""
         vault_service_dir: ""
         letsencrypt_email: ""
@@ -54,6 +57,7 @@ Example Playbook
         vault_policy_devops: ""
         vault_policy_servers: ""
         vault_policy_dev: ""
+        vault_authtype: ""
         vault_users_devops:
           - username: ""
             password: ""

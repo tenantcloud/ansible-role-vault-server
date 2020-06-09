@@ -1,0 +1,8 @@
+---
+# defaults file for tenantcloud.vault_server
+
+vault_version: "1.4.2"
+vault_domain: "vault.example.com"
+letsencrypt_email: "vault@example.com"
+urllib3_version: "1.25.9"
+chardet_version: "3.0.4"

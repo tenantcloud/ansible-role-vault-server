@@ -1,0 +1,7 @@
+path "{{ vault_dashboard_secret_engine }}/*" {
+  capabilities = ["create", "update", "read", "list"]
+}
+
+path "{{ vault_promo_secret_engine }}/*" {
+  capabilities = ["create", "update", "read", "list"]
+}

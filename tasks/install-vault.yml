@@ -1,0 +1,27 @@
+---
+- name: Download latest version of Vault
+  get_url:
+    url: https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip
+    dest: $HOME/vault_{{ vault_version }}_linux_amd64.zip
+    mode: '0440'
+
+- name: Unarchive a package file of Vault
+  unarchive:
+    src: $HOME/vault_{{ vault_version }}_linux_amd64.zip
+    dest: /usr/bin
+    remote_src: true
+
+- name: Delete a package file of Vault
+  file:
+    path: $HOME/vault_{{ vault_version }}_linux_amd64.zip
+    state: absent
+  become: false
+
+- name: Install ansible, ansible-modules-hashivault
+  pip:
+    name:
+      - ansible
+      - ansible-modules-hashivault
+    extra_args: --upgrade
+    executable: /usr/bin/pip3
+  become: true

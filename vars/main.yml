@@ -1,0 +1,7 @@
+---
+# vars file for tenantcloud.vault_server
+
+unseal_keys: []
+devops_id: []
+servers_id: []
+dev_id: []

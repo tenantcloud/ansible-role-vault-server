@@ -1,0 +1,241 @@
+---
+- name: Create vault directory
+  file:
+    path: /etc/{{ vault_work_dir }}
+    state: directory
+    mode: 0777
+  become: true
+
+- name: Copy vault service file to server
+  template:
+    src: vault.service.j2
+    dest: /etc/systemd/system/vault.service
+    owner: root
+    group: root
+  changed_when: false
+
+- name: Copy vault server config file to server
+  template:
+    src: config.json.j2
+    dest: /etc/{{ vault_work_dir }}/config.json
+  changed_when: false
+
+- name: Copy vault server dev policy file to server
+  template:
+    src: dev.hcl.j2
+    dest: /etc/{{ vault_work_dir }}/dev.hcl
+  changed_when: false
+
+- name: Copy vault server servers policy file to server
+  template:
+    src: servers.hcl.j2
+    dest: /etc/{{ vault_work_dir }}/servers.hcl
+  changed_when: false
+
+- name: Start service vault
+  become: true
+  command: systemctl start vault.service
+
+- name: Enable service vault
+  become: true
+  command: systemctl enable vault.service
+
+- name: Initialize vault
+  hashivault_init:
+    url: "{{ vault_url }}"
+  register: vault_keys
+
+- name: Add vault root token key
+  set_fact:
+    vault_root_token: "{{ vault_keys.root_token }}"
+
+- name: Add vault unseal keys
+  set_fact:
+    unseal_keys: "{{ unseal_keys + [item] }}"
+  loop: "{{ vault_keys.keys_base64 }}"
+
+- name: Save vault root token key in file
+  copy: content="{{ vault_root_token }}" dest=/etc/{{ vault_work_dir }}/vault_root_token.txt
+
+- name: Unseal vault
+  hashivault_unseal:
+    url: "{{ vault_url }}"
+    keys: '{{item}}'
+  loop: "{{ unseal_keys }}"
+
+- name: Create secret engine for dev
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_dev_secret_engine }}"
+    backend: kv-v2
+
+- name: Create secret engine for dashboard
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_dashboard_secret_engine }}"
+    backend: kv-v2
+
+- name: Create secret engine for promo
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_promo_secret_engine }}"
+    backend: kv-v2
+
+- name: Create policy for servers
+  hashivault_policy_set_from_file:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_servers }}"
+    rules_file: /etc/{{ vault_work_dir }}/servers.hcl
+
+- name: Create policy for dev
+  hashivault_policy_set_from_file:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_dev }}"
+    rules_file: /etc/{{ vault_work_dir }}/dev.hcl
+
+- name: Enable userpass auth_method
+  hashivault_auth_enable:
+    name: "userpass"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+
+- name: Get auth list
+  hashivault_auth_list:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  register: hashivault_auth_list
+
+- name: Get mount_accessor
+  set_fact:
+    userpass_mount_accessor: "{{ hashivault_auth_list | json_query('backends.\"userpass/\".accessor') }}"
+
+- name: Create users for devops(token)
+  hashivault_identity_entity:
+    name: "{{ item.username }}"
+    password: "{{ item.password }}"
+    policies:
+      - "{{ vault_policy_dev }}"
+      - "{{ vault_policy_servers }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_devops }}"
+  register: users_for_devops
+
+- name: Create users for devops(userpass)
+  hashivault_userpass_create:
+    name: "{{ item.username }}"
+    pass: "{{ item.password }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_devops }}"
+
+- name: Create users alias for devops
+  hashivault_identity_entity_alias:
+    name: "{{ item.username }}"
+    entity_name: "{{ item.username }}"
+    mount_accessor: "{{ userpass_mount_accessor }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_devops }}"
+
+- name: Create users for servers(token)
+  hashivault_identity_entity:
+    name: "{{ item.username }}"
+    password: "{{ item.password }}"
+    policies: "{{ vault_policy_servers }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_servers }}"
+  register: users_for_servers
+
+- name: Create users for servers(userpass)
+  hashivault_userpass_create:
+    name: "{{ item.username }}"
+    pass: "{{ item.password }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_servers }}"
+
+- name: Create users alias for servers
+  hashivault_identity_entity_alias:
+    name: "{{ item.username }}"
+    entity_name: "{{ item.username }}"
+    mount_accessor: "{{ userpass_mount_accessor }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_servers }}"
+
+- name: Create users for dev(token)
+  hashivault_identity_entity:
+    name: "{{ item.username }}"
+    password: "{{ item.password }}"
+    policies: "{{ vault_policy_dev }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_dev }}"
+  register: users_for_dev
+
+- name: Create users for dev(userpass)
+  hashivault_userpass_create:
+    name: "{{ item.username }}"
+    pass: "{{ item.password }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_dev }}"
+
+- name: Create users alias for dev
+  hashivault_identity_entity_alias:
+    name: "{{ item.username }}"
+    entity_name: "{{ item.username }}"
+    mount_accessor: "{{ userpass_mount_accessor }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+  loop: "{{ vault_users_dev }}"
+
+- name: Get devops_id keys
+  set_fact:
+    devops_id: "{{ devops_id + [item] }}"
+  loop: "{{ users_for_devops | json_query('results[*].data.id') }}"
+
+- name: Get servers_id keys
+  set_fact:
+    servers_id: "{{ servers_id + [item] }}"
+  loop: "{{ users_for_servers | json_query('results[*].data.id') }}"
+
+- name: Get dev_id keys
+  set_fact:
+    dev_id: "{{ dev_id + [item] }}"
+  loop: "{{ users_for_dev | json_query('results[*].data.id') }}"
+
+- name: Create group for devops
+  hashivault_identity_group:
+    name: "{{ vault_policy_devops }}"
+    policies:
+      - "{{ vault_policy_dev }}"
+      - "{{ vault_policy_servers }}"
+    member_entity_ids: "{{ devops_id }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+
+- name: Create group for servers
+  hashivault_identity_group:
+    name: "{{ vault_policy_servers }}"
+    policies:
+      - "{{ vault_policy_servers }}"
+    member_entity_ids: "{{ servers_id }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+
+- name: Create group for dev
+  hashivault_identity_group:
+    name: "{{ vault_policy_dev }}"
+    policies:
+      - "{{ vault_policy_dev }}"
+    member_entity_ids: "{{ dev_id }}"
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"

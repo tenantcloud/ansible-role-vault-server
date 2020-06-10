@@ -44,4 +44,6 @@
     name: letsencrypt_renewal
     special_time: weekly
     job: "certbot certonly --standalone --noninteractive --agree-tos --email \
-    {{ letsencrypt_email }} -d {{ vault_domain }}"
+    {{ letsencrypt_email }} -d {{ vault_domain }} --deploy-hook \
+    \"sudo systemctl restart vault.service && sleep 3 && egrep -m3 '^Unseal Key' \
+    /etc/{{ vault_work_dir }}/init.file | cut -f2- -d: | tr -d ' ' | while read key; do   vault operator unseal ${key}; done\""

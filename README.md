@@ -26,6 +26,11 @@ vault_policy_devops:
 vault_policy_servers:
 vault_policy_dev:
 vault_authtype:
+default_lease_ttl:
+max_lease_ttl:
+vault_users_devops:
+vault_users_servers:
+vault_users_dev:
 unseal_keys: []
 devops_id: []
 servers_id: []
@@ -58,6 +63,8 @@ Example Playbook
         vault_policy_servers: ""
         vault_policy_dev: ""
         vault_authtype: ""
+        default_lease_ttl: ""
+        max_lease_ttl: ""
         vault_users_devops:
           - username: ""
             password: ""

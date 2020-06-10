@@ -69,6 +69,7 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_dashboard_secret_engine }}"
     backend: kv-v2
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
 
 - name: Create secret engine for promo
   hashivault_secret_engine:
@@ -96,6 +97,13 @@
     name: "userpass"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
+
+- name: Config userpass auth_method
+  hashivault_auth_method:
+    method_type: userpass
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
 
 - name: Get auth list
   hashivault_auth_list:

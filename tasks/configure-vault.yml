@@ -63,13 +63,6 @@
     keys: '{{item}}'
   loop: "{{ unseal_keys }}"
 
-- name: Create secret engine for dev
-  hashivault_secret_engine:
-    url: "{{ vault_url }}"
-    token: "{{ vault_root_token }}"
-    name: "{{ vault_dev_secret_engine }}"
-    backend: kv-v2
-
 - name: Create secret engine for dashboard
   hashivault_secret_engine:
     url: "{{ vault_url }}"

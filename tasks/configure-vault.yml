@@ -77,6 +77,7 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_promo_secret_engine }}"
     backend: kv-v2
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
 
 - name: Create policy for servers
   hashivault_policy_set_from_file:

@@ -5,3 +5,11 @@ unseal_keys: []
 devops_id: []
 servers_id: []
 dev_id: []
+vault_work_dir: "vault"
+vault_dev_secret_engine: "dev"
+vault_policy_devops: "devops"
+vault_policy_servers: "servers"
+vault_policy_dev: "dev"
+vault_authtype: "userpass"
+default_lease_ttl: "7200"
+max_lease_ttl: "7200"

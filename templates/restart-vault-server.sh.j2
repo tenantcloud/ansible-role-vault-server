@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+sudo systemctl restart vault.service
+
+sleep 3
+
+awk -F '[][ ,"]+' '{ for (i = 2; i < NF; i++) { print $i; } }' /opt/{{ vault_work_dir }}/unseal_keys.txt \
+| while read key; do   VAULT_ADDR={{ vault_url }} vault operator unseal ${key}; done

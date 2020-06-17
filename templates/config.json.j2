@@ -4,11 +4,11 @@ ui = true
 listener "tcp" {
     address = "0.0.0.0:8200"
     tls_disable = 0
-    tls_cert_file = "/etc/letsencrypt/live/{{ vault_domain }}/fullchain.pem"
-    tls_key_file = "/etc/letsencrypt/live/{{ vault_domain }}/privkey.pem"
+    tls_cert_file = "/etc/letsencrypt/live/{{ vault_domains }}/fullchain.pem"
+    tls_key_file = "/etc/letsencrypt/live/{{ vault_domains }}/privkey.pem"
 }
 storage "file" {
-  path = "/etc/{{ vault_work_dir }}/data"
+  path = "/opt/{{ vault_work_dir }}/data"
 }
-max_lease_ttl = "10h"
-default_lease_ttl = "10h"
+max_lease_ttl = "7200"
+default_lease_ttl = "7200"

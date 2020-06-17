@@ -2,13 +2,13 @@
 Description=vault service
 Requires=network-online.target
 After=network-online.target
-ConditionFileNotEmpty=/etc/{{ vault_work_dir }}/config.json
+ConditionFileNotEmpty=/opt/{{ vault_work_dir }}/config.json
 
 [Service]
 EnvironmentFile=-/etc/sysconfig/vault
 Environment=GOMAXPROCS=2
 Restart=on-failure
-ExecStart=/usr/bin/vault server -config=/etc/{{ vault_work_dir }}/config.json
+ExecStart=/usr/bin/vault server -config=/opt/{{ vault_work_dir }}/config.json
 StandardOutput=/var/log/vault-output.log
 StandardError=/var/log/vault-error.log
 LimitMEMLOCK=infinity

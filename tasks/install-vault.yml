@@ -1,4 +1,11 @@
 ---
+- name: Create vault directory
+  file:
+    path: /opt/{{ vault_work_dir }}
+    state: directory
+    mode: 0777
+  become: true
+
 - name: Download latest version of Vault
   get_url:
     url: https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip
@@ -16,6 +23,12 @@
     path: $HOME/vault_{{ vault_version }}_linux_amd64.zip
     state: absent
   become: false
+
+- name: Install pip3
+  apt:
+    name: python3-pip
+    update_cache: yes
+    state: present
 
 - name: Install ansible, ansible-modules-hashivault
   pip:

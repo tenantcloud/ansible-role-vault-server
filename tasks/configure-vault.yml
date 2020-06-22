@@ -1,11 +1,4 @@
 ---
-- name: Create vault directory
-  file:
-    path: /etc/{{ vault_work_dir }}
-    state: directory
-    mode: 0777
-  become: true
-
 - name: Copy vault service file to server
   template:
     src: vault.service.j2
@@ -17,19 +10,19 @@
 - name: Copy vault server config file to server
   template:
     src: config.json.j2
-    dest: /etc/{{ vault_work_dir }}/config.json
+    dest: /opt/{{ vault_work_dir }}/config.json
   changed_when: false
 
 - name: Copy vault server dev policy file to server
   template:
     src: dev.hcl.j2
-    dest: /etc/{{ vault_work_dir }}/dev.hcl
+    dest: /opt/{{ vault_work_dir }}/dev.hcl
   changed_when: false
 
 - name: Copy vault server servers policy file to server
   template:
     src: servers.hcl.j2
-    dest: /etc/{{ vault_work_dir }}/servers.hcl
+    dest: /opt/{{ vault_work_dir }}/servers.hcl
   changed_when: false
 
 - name: Start service vault
@@ -54,8 +47,11 @@
     unseal_keys: "{{ unseal_keys + [item] }}"
   loop: "{{ vault_keys.keys_base64 }}"
 
-- name: Save vault root token key in file
-  copy: content="{{ vault_root_token }}" dest=/etc/{{ vault_work_dir }}/vault_root_token.txt
+- name: Save vault root token key to file
+  copy: content="{{ vault_root_token }}" dest=/opt/{{ vault_work_dir }}/vault_root_token.txt
+
+- name: Save vault unseal keys to file
+  copy: content="{{ unseal_keys }}" dest=/opt/{{ vault_work_dir }}/unseal_keys.txt
 
 - name: Unseal vault
   hashivault_unseal:
@@ -63,19 +59,13 @@
     keys: '{{item}}'
   loop: "{{ unseal_keys }}"
 
-- name: Create secret engine for dev
-  hashivault_secret_engine:
-    url: "{{ vault_url }}"
-    token: "{{ vault_root_token }}"
-    name: "{{ vault_dev_secret_engine }}"
-    backend: kv-v2
-
 - name: Create secret engine for dashboard
   hashivault_secret_engine:
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
     name: "{{ vault_dashboard_secret_engine }}"
     backend: kv-v2
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
 
 - name: Create secret engine for promo
   hashivault_secret_engine:
@@ -83,26 +73,34 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_promo_secret_engine }}"
     backend: kv-v2
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
 
 - name: Create policy for servers
   hashivault_policy_set_from_file:
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
     name: "{{ vault_policy_servers }}"
-    rules_file: /etc/{{ vault_work_dir }}/servers.hcl
+    rules_file: /opt/{{ vault_work_dir }}/servers.hcl
 
 - name: Create policy for dev
   hashivault_policy_set_from_file:
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
     name: "{{ vault_policy_dev }}"
-    rules_file: /etc/{{ vault_work_dir }}/dev.hcl
+    rules_file: /opt/{{ vault_work_dir }}/dev.hcl
 
 - name: Enable userpass auth_method
   hashivault_auth_enable:
     name: "userpass"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
+
+- name: Config userpass auth_method
+  hashivault_auth_method:
+    method_type: userpass
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
 
 - name: Get auth list
   hashivault_auth_list:

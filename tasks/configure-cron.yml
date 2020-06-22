@@ -1,0 +1,13 @@
+---
+- name: Copy vault restart script to server
+  template:
+    src: restart-vault-server.sh.j2
+    dest: /opt/{{ vault_work_dir }}/restart-vault-server.sh
+    mode: a+x
+  changed_when: false
+
+- name: Add cron job for certbot renewal
+  cron:
+    name: letsencrypt_renewal
+    special_time: weekly
+    job: "sudo certbot renew --noninteractive --post-hook /opt/vault/restart-vault-server.sh"

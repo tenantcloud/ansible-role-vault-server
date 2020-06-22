@@ -8,28 +8,40 @@ Ansible role for install vault_server project.
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Installs and configures Certbot (for Let's Encrypt)
+
+  ansible-galaxy install geerlingguy.certbot
 
 Role Variables
 --------------
 
 ansible_user: "ubuntu" os username
 vault_version:
-vault_domain:
-vault_url:
 vault_work_dir:
-letsencrypt_email:
+vault_domains: 
+vault_url:
 vault_dev_secret_engine:
 vault_dashboard_secret_engine:
 vault_promo_secret_engine:
+certbot_admin_email:
+domains:
 vault_policy_devops:
 vault_policy_servers:
 vault_policy_dev:
 vault_authtype:
+default_lease_ttl:
+max_lease_ttl:
+vault_users_devops:
+vault_users_servers:
+vault_users_dev:
 unseal_keys: []
 devops_id: []
 servers_id: []
 dev_id: []
+certbot_auto_renew:
+certbot_create_if_missing:
+certbot_create_method:
+certbot_create_standalone_stop_services: []
 
 Dependencies
 ------------
@@ -46,18 +58,15 @@ Example Playbook
       vars:
         ansible_user: "ubuntu"
         vault_version: ""
-        vault_domain: ""
-        vault_url: ""
         vault_work_dir: ""
-        vault_service_dir: ""
-        letsencrypt_email: ""
+        vault_domains: ""
         vault_dev_secret_engine: ""
         vault_dashboard_secret_engine: ""
         vault_promo_secret_engine: ""
-        vault_policy_devops: ""
-        vault_policy_servers: ""
-        vault_policy_dev: ""
-        vault_authtype: ""
+        certbot_admin_email: ""
+        certbot_certs:
+          - domains:
+              - ""
         vault_users_devops:
           - username: ""
             password: ""
@@ -68,6 +77,7 @@ Example Playbook
           - username: ""
             password: ""
       roles:
+        - geerlingguy.certbot
         - tenantcloud.vault_server
 
 License

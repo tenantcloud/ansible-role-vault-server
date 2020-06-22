@@ -66,7 +66,7 @@ Example Playbook
         certbot_admin_email: ""
         certbot_certs:
           - domains:
-              - ""
+              - "{{ vault_domains }}"
         vault_users_devops:
           - username: ""
             password: ""

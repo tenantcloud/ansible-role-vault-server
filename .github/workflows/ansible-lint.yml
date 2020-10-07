@@ -6,10 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          pip install -r deps/python.txt
-          ansible-galaxy install -r deps/galaxy.yml -p ./roles/ --force
       - name: Lint Ansible Playbook
         uses: ansible/ansible-lint-action@151b9a2
         with:

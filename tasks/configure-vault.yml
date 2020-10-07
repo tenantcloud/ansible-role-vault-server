@@ -48,10 +48,18 @@
   loop: "{{ vault_keys.keys_base64 }}"
 
 - name: Save vault root token key to file
-  copy: content="{{ vault_root_token }}" dest=/opt/{{ vault_work_dir }}/vault_root_token.txt
+  copy:
+    content: "{{ vault_root_token }}"
+    dest: /opt/{{ vault_work_dir }}/vault_root_token.txt
+    mode: 0644
+    remote_src: true
 
 - name: Save vault unseal keys to file
-  copy: content="{{ unseal_keys }}" dest=/opt/{{ vault_work_dir }}/unseal_keys.txt
+  copy:
+    content: "{{ unseal_keys }}"
+    dest: /opt/{{ vault_work_dir }}/unseal_keys.txt
+    mode: 0644
+    remote_src: true
 
 - name: Unseal vault
   hashivault_unseal:
@@ -65,7 +73,7 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_dashboard_secret_engine }}"
     backend: kv-v2
-    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}   # yamllint disable-line rule:line-length
 
 - name: Create secret engine for promo
   hashivault_secret_engine:
@@ -73,7 +81,7 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_promo_secret_engine }}"
     backend: kv-v2
-    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}   # yamllint disable-line rule:line-length
 
 - name: Create policy for servers
   hashivault_policy_set_from_file:
@@ -100,7 +108,7 @@
     method_type: userpass
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
-    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
+    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}   # yamllint disable-line rule:line-length
 
 - name: Get auth list
   hashivault_auth_list:
@@ -110,7 +118,8 @@
 
 - name: Get mount_accessor
   set_fact:
-    userpass_mount_accessor: "{{ hashivault_auth_list | json_query('backends.\"userpass/\".accessor') }}"
+    userpass_mount_accessor: "{{ hashivault_auth_list |
+     json_query('backends.\"userpass/\".accessor') }}"
 
 - name: Create users for devops(token)
   hashivault_identity_entity:

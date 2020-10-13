@@ -1,3 +1,7 @@
+
+![Ansible Lint](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Ansible%20Lint/badge.svg?branch-master)
+![Yaml Lint](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Yaml%20Lint/badge.svg?branch-master)
+
 tenantcloud.vault_server
 =========
 

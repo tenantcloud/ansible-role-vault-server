@@ -5,38 +5,50 @@
     dest: /etc/systemd/system/vault.service
     owner: root
     group: root
+    mode: 0644
   changed_when: false
 
 - name: Copy vault server config file to server
   template:
     src: config.json.j2
     dest: /opt/{{ vault_work_dir }}/config.json
+    mode: 0644
   changed_when: false
 
 - name: Copy vault server dev policy file to server
   template:
     src: dev.hcl.j2
     dest: /opt/{{ vault_work_dir }}/dev.hcl
+    mode: 0644
   changed_when: false
 
 - name: Copy vault server servers policy file to server
   template:
     src: servers.hcl.j2
     dest: /opt/{{ vault_work_dir }}/servers.hcl
+    mode: 0644
   changed_when: false
 
 - name: Start service vault
   become: true
   command: systemctl start vault.service
+  changed_when: false
+  tags:
+    - skip_ansible_lint
 
 - name: Enable service vault
   become: true
   command: systemctl enable vault.service
+  changed_when: false
+  tags:
+    - skip_ansible_lint
 
 - name: Initialize vault
   hashivault_init:
     url: "{{ vault_url }}"
   register: vault_keys
+  tags:
+    - skip_ansible_lint
 
 - name: Add vault root token key
   set_fact:
@@ -48,16 +60,26 @@
   loop: "{{ vault_keys.keys_base64 }}"
 
 - name: Save vault root token key to file
-  copy: content="{{ vault_root_token }}" dest=/opt/{{ vault_work_dir }}/vault_root_token.txt
+  copy:
+    content: "{{ vault_root_token }}"
+    dest: /opt/{{ vault_work_dir }}/vault_root_token.txt
+    mode: 0644
+    remote_src: true
 
 - name: Save vault unseal keys to file
-  copy: content="{{ unseal_keys }}" dest=/opt/{{ vault_work_dir }}/unseal_keys.txt
+  copy:
+    content: "{{ unseal_keys }}"
+    dest: /opt/{{ vault_work_dir }}/unseal_keys.txt
+    mode: 0644
+    remote_src: true
 
 - name: Unseal vault
   hashivault_unseal:
     url: "{{ vault_url }}"
-    keys: '{{item}}'
+    keys: '{{ item }}'
   loop: "{{ unseal_keys }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create secret engine for dashboard
   hashivault_secret_engine:
@@ -65,7 +87,14 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_dashboard_secret_engine }}"
     backend: kv-v2
-    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
 
 - name: Create secret engine for promo
   hashivault_secret_engine:
@@ -73,7 +102,14 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_promo_secret_engine }}"
     backend: kv-v2
-    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
 
 - name: Create policy for servers
   hashivault_policy_set_from_file:
@@ -81,6 +117,8 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_policy_servers }}"
     rules_file: /opt/{{ vault_work_dir }}/servers.hcl
+  tags:
+    - skip_ansible_lint
 
 - name: Create policy for dev
   hashivault_policy_set_from_file:
@@ -88,29 +126,43 @@
     token: "{{ vault_root_token }}"
     name: "{{ vault_policy_dev }}"
     rules_file: /opt/{{ vault_work_dir }}/dev.hcl
+  tags:
+    - skip_ansible_lint
 
 - name: Enable userpass auth_method
   hashivault_auth_enable:
     name: "userpass"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Config userpass auth_method
   hashivault_auth_method:
     method_type: userpass
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
-    config: {"default_lease_ttl": "{{ default_lease_ttl }}", "force_no_cache": false, "max_lease_ttl": "{{ max_lease_ttl }}"}
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
 
 - name: Get auth list
   hashivault_auth_list:
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   register: hashivault_auth_list
+  tags:
+    - skip_ansible_lint
 
 - name: Get mount_accessor
   set_fact:
-    userpass_mount_accessor: "{{ hashivault_auth_list | json_query('backends.\"userpass/\".accessor') }}"
+    userpass_mount_accessor: "{{ hashivault_auth_list |
+     json_query('backends.\"userpass/\".accessor') }}"
 
 - name: Create users for devops(token)
   hashivault_identity_entity:
@@ -123,6 +175,8 @@
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_devops }}"
   register: users_for_devops
+  tags:
+    - skip_ansible_lint
 
 - name: Create users for devops(userpass)
   hashivault_userpass_create:
@@ -131,6 +185,8 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_devops }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create users alias for devops
   hashivault_identity_entity_alias:
@@ -140,6 +196,8 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_devops }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create users for servers(token)
   hashivault_identity_entity:
@@ -150,6 +208,8 @@
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_servers }}"
   register: users_for_servers
+  tags:
+    - skip_ansible_lint
 
 - name: Create users for servers(userpass)
   hashivault_userpass_create:
@@ -158,6 +218,8 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_servers }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create users alias for servers
   hashivault_identity_entity_alias:
@@ -167,6 +229,8 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_servers }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create users for dev(token)
   hashivault_identity_entity:
@@ -177,6 +241,8 @@
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_dev }}"
   register: users_for_dev
+  tags:
+    - skip_ansible_lint
 
 - name: Create users for dev(userpass)
   hashivault_userpass_create:
@@ -185,6 +251,8 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_dev }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create users alias for dev
   hashivault_identity_entity_alias:
@@ -194,6 +262,8 @@
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
   loop: "{{ vault_users_dev }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Get devops_id keys
   set_fact:
@@ -219,6 +289,8 @@
     member_entity_ids: "{{ devops_id }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create group for servers
   hashivault_identity_group:
@@ -228,6 +300,8 @@
     member_entity_ids: "{{ servers_id }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
+  tags:
+    - skip_ansible_lint
 
 - name: Create group for dev
   hashivault_identity_group:
@@ -237,3 +311,5 @@
     member_entity_ids: "{{ dev_id }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
+  tags:
+    - skip_ansible_lint

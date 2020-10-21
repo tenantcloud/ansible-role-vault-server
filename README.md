@@ -1,3 +1,7 @@
+
+![Ansible Lint](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Ansible%20Lint/badge.svg?branch-master)
+![Yaml Lint](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Yaml%20Lint/badge.svg?branch-master)
+
 tenantcloud.vault_server
 =========
 
@@ -20,6 +24,7 @@ vault_version:
 vault_work_dir:
 vault_domains: 
 vault_url:
+vault_releases_url:
 vault_dev_secret_engine:
 vault_dashboard_secret_engine:
 vault_promo_secret_engine:
@@ -49,10 +54,13 @@ Dependencies
 - python@3
 - ansible
 - ansible-modules-hashivault
-  
+- hvac
+- jmespath
+
 Example Playbook
 ----------------
 
+```yaml
     - hosts: localhost
       become: True
       vars:
@@ -79,6 +87,7 @@ Example Playbook
       roles:
         - geerlingguy.certbot
         - tenantcloud.vault_server
+```
 
 License
 -------

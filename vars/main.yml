@@ -6,6 +6,8 @@ devops_id: []
 servers_id: []
 dev_id: []
 vault_url: "https://{{ vault_domains }}:8200"
+vault_releases_url: "https://releases.hashicorp.com/vault/\
+{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip"
 vault_policy_devops: "devops"
 vault_policy_servers: "servers"
 vault_policy_dev: "dev"

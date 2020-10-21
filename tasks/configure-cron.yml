@@ -10,4 +10,5 @@
   cron:
     name: letsencrypt_renewal
     special_time: weekly
-    job: "sudo certbot renew --noninteractive --post-hook /opt/vault/restart-vault-server.sh"
+    job: "sudo certbot renew
+     --noninteractive --post-hook /opt/vault/restart-vault-server.sh"

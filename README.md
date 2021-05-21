@@ -1,5 +1,7 @@
 
 ![Lint Ansible Roles](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Lint%20Ansible%20Roles/badge.svg?branch-master)
+[![Build Status](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Enlarge%20version/badge.svg)](https://github.com/tenantcloud/ansible-role-vault-server/workflows/Enlarge%20version/badge.svg)
+[![Stable Version](https://img.shields.io/github/v/tag/tenantcloud/ansible-role-vault-server)](https://img.shields.io/github/v/tag/tenantcloud/ansible-role-vault-server)
 
 tenantcloud.vault_server
 =========
@@ -10,6 +12,12 @@ Ansible role for install vault_server project.
 
 Requirements
 ------------
+
+If installing from a local computer to a remote server,
+the following modules must be installed on the local pc:
+
+  sudo apt install python3-pip
+  pip3 install ansible-modules-hashivault
 
 Installs and configures Certbot (for Let's Encrypt)
 
@@ -27,8 +35,13 @@ vault_releases_url:
 vault_dev_secret_engine:
 vault_dashboard_secret_engine:
 vault_promo_secret_engine:
+vault_socket_secret_engine:
+vault_certs_secret_engine:
+vault_sshkeys_secret_engine:
+vault_starage_type: "raft" or "file"
 certbot_admin_email:
 domains:
+ansible_ssh_private_key_file:
 vault_policy_devops:
 vault_policy_servers:
 vault_policy_dev:
@@ -66,14 +79,19 @@ Example Playbook
         ansible_user: "ubuntu"
         vault_version: ""
         vault_work_dir: ""
-        vault_domains: ""
+        vault_domains: "{{ vault_domains }}"
         vault_dev_secret_engine: ""
         vault_dashboard_secret_engine: ""
         vault_promo_secret_engine: ""
+        vault_socket_secret_engine: ""
+        vault_certs_secret_engine: ""
+        vault_sshkeys_secret_engine: ""
+        vault_starage_type: "raft"
         certbot_admin_email: ""
         certbot_certs:
           - domains:
               - "{{ vault_domains }}"
+        ansible_ssh_private_key_file: ""
         vault_users_devops:
           - username: ""
             password: ""

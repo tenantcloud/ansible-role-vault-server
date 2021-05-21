@@ -14,10 +14,18 @@ path "laravel-example/*" {
   capabilities = ["create", "update", "read", "delete", "list"]
 }
 
-path "certs/production/*" {
+path "certs/dev/*" {
    capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-path "certs/*" {
-  capabilities = ["list"]
+path "ssh-keys/dev/*" {
+   capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "scripts/dev/*" {
+   capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "home.tenantcloud.com/dev/*" {
+  capabilities = ["create", "update", "read", "delete", "list"]
 }

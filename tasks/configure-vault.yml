@@ -8,24 +8,54 @@
     mode: 0644
   changed_when: false
 
-- name: Copy vault server config file to server
+- name: Copy vault server config for "file" storage type
   template:
-    src: config.json.j2
+    src: config-file.json.j2
     dest: /opt/{{ vault_work_dir }}/config.json
     mode: 0644
   changed_when: false
+  when: vault_starage_type == "file"
 
-- name: Copy vault server dev policy file to server
+- name: Copy vault server config for "raft" storage type
+  template:
+    src: config-raft.json.j2
+    dest: /opt/{{ vault_work_dir }}/config.json
+    mode: 0644
+  changed_when: false
+  when: vault_starage_type == "raft"
+
+- name: Create raft directory
+  file:
+    path: /opt/{{ vault_work_dir }}/raft
+    state: directory
+    mode: 0755
+  when: vault_starage_type == "raft"
+
+- name: Copy vault dev policy file to server
   template:
     src: dev.hcl.j2
     dest: /opt/{{ vault_work_dir }}/dev.hcl
     mode: 0644
   changed_when: false
 
-- name: Copy vault server servers policy file to server
+- name: Copy vault server policy file to server
   template:
     src: servers.hcl.j2
     dest: /opt/{{ vault_work_dir }}/servers.hcl
+    mode: 0644
+  changed_when: false
+
+- name: Copy vault pipeline policy file to server
+  template:
+    src: pipeline.hcl.j2
+    dest: /opt/{{ vault_work_dir }}/pipeline.hcl
+    mode: 0644
+  changed_when: false
+
+- name: Copy vault admin policy file to server
+  template:
+    src: admin.hcl.j2
+    dest: /opt/{{ vault_work_dir }}/admin.hcl
     mode: 0644
   changed_when: false
 
@@ -81,6 +111,11 @@
   tags:
     - skip_ansible_lint
 
+- name: Wait for vault to become open on the host
+  wait_for:
+    port: 8200
+    delay: 10
+
 - name: Create secret engine for dashboard
   hashivault_secret_engine:
     url: "{{ vault_url }}"
@@ -111,6 +146,51 @@
   tags:
     - skip_ansible_lint
 
+- name: Create secret engine for socket
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_socket_secret_engine }}"
+    backend: kv-v2
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
+
+- name: Create secret engine for certs
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_certs_secret_engine }}"
+    backend: kv-v1
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
+
+- name: Create secret engine for sshkeys
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_sshkeys_secret_engine }}"
+    backend: kv-v1
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
+
 - name: Create policy for servers
   hashivault_policy_set_from_file:
     url: "{{ vault_url }}"
@@ -120,12 +200,30 @@
   tags:
     - skip_ansible_lint
 
+- name: Create policy for pipeline
+  hashivault_policy_set_from_file:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_pipeline }}"
+    rules_file: /opt/{{ vault_work_dir }}/pipeline.hcl
+  tags:
+    - skip_ansible_lint
+
 - name: Create policy for dev
   hashivault_policy_set_from_file:
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
     name: "{{ vault_policy_dev }}"
     rules_file: /opt/{{ vault_work_dir }}/dev.hcl
+  tags:
+    - skip_ansible_lint
+
+- name: Create policy for admin
+  hashivault_policy_set_from_file:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_admin }}"
+    rules_file: /opt/{{ vault_work_dir }}/admin.hcl
   tags:
     - skip_ansible_lint
 
@@ -286,6 +384,7 @@
     policies:
       - "{{ vault_policy_dev }}"
       - "{{ vault_policy_servers }}"
+      - "{{ vault_policy_admin }}"
     member_entity_ids: "{{ devops_id }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"

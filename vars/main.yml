@@ -16,6 +16,12 @@ vault_policy_admin: "admin"
 vault_authtype: "userpass"
 default_lease_ttl: "7200"
 max_lease_ttl: "7200"
+cluster_name: "tcvault"
+tls_cert_file: "/etc/letsencrypt/live/{{ vault_domains }}/fullchain.pem"
+tls_key_file: "/etc/letsencrypt/live/{{ vault_domains }}/privkey.pem"
+ui: true
+disable_cache: true
+disable_mlock: true
 certbot_auto_renew: false
 certbot_create_if_missing: true
 certbot_create_method: standalone

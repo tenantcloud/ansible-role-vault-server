@@ -1,0 +1,15 @@
+---
+
+- name: Create raft directory
+  file:
+    path: /opt/{{ vault_work_dir }}/raft
+    state: directory
+    mode: 0755
+
+- name: Copy vault server config for "raft" storage type
+  template:
+    src: config-raft.json.j2
+    dest: /opt/{{ vault_work_dir }}/config.json
+    mode: 0644
+  changed_when: false
+  when: vault_starage_type == "raft"

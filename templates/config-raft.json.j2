@@ -1,13 +1,13 @@
-cluster_name = "tcvault"
-disable_cache = true
-disable_mlock = true
-ui = true
+cluster_name = "{{ cluster_name }}"
+disable_cache = "{{ disable_cache }}"
+disable_mlock = "{{ disable_mlock }}"
+ui = "{{ ui }}"
 
 listener "tcp" {
   address = "0.0.0.0:8200"
   tls_disable = 0
-  tls_cert_file = "/etc/letsencrypt/live/{{ vault_domains }}/fullchain.pem"
-  tls_key_file = "/etc/letsencrypt/live/{{ vault_domains }}/privkey.pem"
+  tls_cert_file = "{{ tls_cert_file }}"
+  tls_key_file = "{{ tls_key_file }}"
 }
 
 storage "raft" {
@@ -15,7 +15,7 @@ storage "raft" {
   node_id = "vault01"
 }
 
-max_lease_ttl = "7200"
-default_lease_ttl = "7200"
+max_lease_ttl = "{{ max_lease_ttl }}"
+default_lease_ttl = "{{ default_lease_ttl }}"
 api_addr = "https://{{ vault_domains }}:8200"
 cluster_addr = "https://{{ vault_domains }}:8201"

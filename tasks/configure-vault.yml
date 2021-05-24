@@ -8,53 +8,36 @@
     mode: 0644
   changed_when: false
 
-- name: Copy vault server config for "file" storage type
-  template:
-    src: config-file.json.j2
-    dest: /opt/{{ vault_work_dir }}/config.json
-    mode: 0644
-  changed_when: false
+- import_tasks: configure-vault-file.yml
   when: vault_starage_type == "file"
 
-- name: Copy vault server config for "raft" storage type
-  template:
-    src: config-raft.json.j2
-    dest: /opt/{{ vault_work_dir }}/config.json
-    mode: 0644
-  changed_when: false
-  when: vault_starage_type == "raft"
-
-- name: Create raft directory
-  file:
-    path: /opt/{{ vault_work_dir }}/raft
-    state: directory
-    mode: 0755
+- import_tasks: configure-vault-raft.yml
   when: vault_starage_type == "raft"
 
 - name: Copy vault dev policy file to server
-  template:
-    src: dev.hcl.j2
+  copy:
+    src: "files/dev.hcl"
     dest: /opt/{{ vault_work_dir }}/dev.hcl
     mode: 0644
   changed_when: false
 
 - name: Copy vault server policy file to server
-  template:
-    src: servers.hcl.j2
+  copy:
+    src: "files/servers.hcl"
     dest: /opt/{{ vault_work_dir }}/servers.hcl
     mode: 0644
   changed_when: false
 
 - name: Copy vault pipeline policy file to server
-  template:
-    src: pipeline.hcl.j2
+  copy:
+    src: "files/pipeline.hcl"
     dest: /opt/{{ vault_work_dir }}/pipeline.hcl
     mode: 0644
   changed_when: false
 
 - name: Copy vault admin policy file to server
-  template:
-    src: admin.hcl.j2
+  copy:
+    src: "files/admin.hcl"
     dest: /opt/{{ vault_work_dir }}/admin.hcl
     mode: 0644
   changed_when: false

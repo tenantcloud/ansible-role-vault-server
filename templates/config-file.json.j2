@@ -1,14 +1,14 @@
-disable_cache = true
-disable_mlock = true
-ui = true
+disable_cache = "{{ disable_cache }}"
+disable_mlock = "{{ disable_mlock }}"
+ui = "{{ ui }}"
 listener "tcp" {
   address = "0.0.0.0:8200"
   tls_disable = 0
-  tls_cert_file = "/etc/letsencrypt/live/{{ vault_domains }}/fullchain.pem"
-  tls_key_file = "/etc/letsencrypt/live/{{ vault_domains }}/privkey.pem"
+  tls_cert_file = "{{ tls_cert_file }}"
+  tls_key_file = "{{ tls_key_file }}"
 }
 storage "file" {
   path = "/opt/{{ vault_work_dir }}/data"
 }
-max_lease_ttl = "7200"
-default_lease_ttl = "7200"
+max_lease_ttl = "{{ max_lease_ttl }}"
+default_lease_ttl = "{{ default_lease_ttl }}"

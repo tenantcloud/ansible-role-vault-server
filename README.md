@@ -32,7 +32,6 @@ vault_work_dir:
 vault_domains: 
 vault_url:
 vault_releases_url:
-vault_dev_secret_engine:
 vault_dashboard_secret_engine:
 vault_promo_secret_engine:
 vault_socket_secret_engine:
@@ -42,12 +41,20 @@ vault_starage_type: "raft" or "file"
 certbot_admin_email:
 domains:
 ansible_ssh_private_key_file:
-vault_policy_devops:
-vault_policy_servers:
-vault_policy_dev:
+vault_policy_devops: ""
+vault_policy_servers: ""
+vault_policy_pipeline: ""
+vault_policy_dev: ""
+vault_policy_admin: ""
 vault_authtype:
 default_lease_ttl:
 max_lease_ttl:
+cluster_name: ""
+tls_cert_file: ""
+tls_key_file: ""
+ui: "true"
+disable_cache: "true"
+disable_mlock: "true"
 vault_users_devops:
 vault_users_servers:
 vault_users_dev:
@@ -80,7 +87,6 @@ Example Playbook
         vault_version: ""
         vault_work_dir: ""
         vault_domains: "{{ vault_domains }}"
-        vault_dev_secret_engine: ""
         vault_dashboard_secret_engine: ""
         vault_promo_secret_engine: ""
         vault_socket_secret_engine: ""

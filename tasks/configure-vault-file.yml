@@ -1,0 +1,8 @@
+---
+
+- name: Copy vault server config for "file" storage type
+  template:
+    src: config-file.json.j2
+    dest: /opt/{{ vault_work_dir }}/config.json
+    mode: 0644
+  changed_when: false

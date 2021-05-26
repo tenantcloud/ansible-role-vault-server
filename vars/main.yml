@@ -10,10 +10,18 @@ vault_releases_url: "https://releases.hashicorp.com/vault/\
 {{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip"
 vault_policy_devops: "devops"
 vault_policy_servers: "servers"
+vault_policy_pipeline: "pipeline"
 vault_policy_dev: "dev"
+vault_policy_admin: "admin"
 vault_authtype: "userpass"
 default_lease_ttl: "7200"
 max_lease_ttl: "7200"
+cluster_name: "tcvault"
+tls_cert_file: "/etc/letsencrypt/live/{{ vault_domains }}/fullchain.pem"
+tls_key_file: "/etc/letsencrypt/live/{{ vault_domains }}/privkey.pem"
+ui: true
+disable_cache: true
+disable_mlock: true
 certbot_auto_renew: false
 certbot_create_if_missing: true
 certbot_create_method: standalone

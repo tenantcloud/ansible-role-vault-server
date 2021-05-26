@@ -1,0 +1,14 @@
+disable_cache = "{{ disable_cache }}"
+disable_mlock = "{{ disable_mlock }}"
+ui = "{{ ui }}"
+listener "tcp" {
+  address = "0.0.0.0:8200"
+  tls_disable = 0
+  tls_cert_file = "{{ tls_cert_file }}"
+  tls_key_file = "{{ tls_key_file }}"
+}
+storage "file" {
+  path = "/opt/{{ vault_work_dir }}/data"
+}
+max_lease_ttl = "{{ max_lease_ttl }}"
+default_lease_ttl = "{{ default_lease_ttl }}"

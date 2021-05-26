@@ -8,24 +8,37 @@
     mode: 0644
   changed_when: false
 
-- name: Copy vault server config file to server
-  template:
-    src: config.json.j2
-    dest: /opt/{{ vault_work_dir }}/config.json
-    mode: 0644
-  changed_when: false
+- import_tasks: configure-vault-file.yml
+  when: vault_starage_type == "file"
 
-- name: Copy vault server dev policy file to server
-  template:
-    src: dev.hcl.j2
+- import_tasks: configure-vault-raft.yml
+  when: vault_starage_type == "raft"
+
+- name: Copy vault dev policy file to server
+  copy:
+    src: "files/dev.hcl"
     dest: /opt/{{ vault_work_dir }}/dev.hcl
     mode: 0644
   changed_when: false
 
-- name: Copy vault server servers policy file to server
-  template:
-    src: servers.hcl.j2
+- name: Copy vault server policy file to server
+  copy:
+    src: "files/servers.hcl"
     dest: /opt/{{ vault_work_dir }}/servers.hcl
+    mode: 0644
+  changed_when: false
+
+- name: Copy vault pipeline policy file to server
+  copy:
+    src: "files/pipeline.hcl"
+    dest: /opt/{{ vault_work_dir }}/pipeline.hcl
+    mode: 0644
+  changed_when: false
+
+- name: Copy vault admin policy file to server
+  copy:
+    src: "files/admin.hcl"
+    dest: /opt/{{ vault_work_dir }}/admin.hcl
     mode: 0644
   changed_when: false
 
@@ -81,6 +94,11 @@
   tags:
     - skip_ansible_lint
 
+- name: Wait for vault to become open on the host
+  wait_for:
+    port: 8200
+    delay: 10
+
 - name: Create secret engine for dashboard
   hashivault_secret_engine:
     url: "{{ vault_url }}"
@@ -111,6 +129,51 @@
   tags:
     - skip_ansible_lint
 
+- name: Create secret engine for socket
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_socket_secret_engine }}"
+    backend: kv-v2
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
+
+- name: Create secret engine for certs
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_certs_secret_engine }}"
+    backend: kv-v1
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
+
+- name: Create secret engine for sshkeys
+  hashivault_secret_engine:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_sshkeys_secret_engine }}"
+    backend: kv-v1
+    config: |
+      {
+         "default_lease_ttl":"{{ default_lease_ttl }}",
+         "force_no_cache":false,
+         "max_lease_ttl":"{{ max_lease_ttl }}"
+      }
+  tags:
+    - skip_ansible_lint
+
 - name: Create policy for servers
   hashivault_policy_set_from_file:
     url: "{{ vault_url }}"
@@ -120,12 +183,30 @@
   tags:
     - skip_ansible_lint
 
+- name: Create policy for pipeline
+  hashivault_policy_set_from_file:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_pipeline }}"
+    rules_file: /opt/{{ vault_work_dir }}/pipeline.hcl
+  tags:
+    - skip_ansible_lint
+
 - name: Create policy for dev
   hashivault_policy_set_from_file:
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"
     name: "{{ vault_policy_dev }}"
     rules_file: /opt/{{ vault_work_dir }}/dev.hcl
+  tags:
+    - skip_ansible_lint
+
+- name: Create policy for admin
+  hashivault_policy_set_from_file:
+    url: "{{ vault_url }}"
+    token: "{{ vault_root_token }}"
+    name: "{{ vault_policy_admin }}"
+    rules_file: /opt/{{ vault_work_dir }}/admin.hcl
   tags:
     - skip_ansible_lint
 
@@ -286,6 +367,7 @@
     policies:
       - "{{ vault_policy_dev }}"
       - "{{ vault_policy_servers }}"
+      - "{{ vault_policy_admin }}"
     member_entity_ids: "{{ devops_id }}"
     url: "{{ vault_url }}"
     token: "{{ vault_root_token }}"

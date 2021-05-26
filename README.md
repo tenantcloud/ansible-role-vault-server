@@ -16,56 +16,38 @@ Requirements
 If installing from a local computer to a remote server,
 the following modules must be installed on the local pc:
 
+  ```bash
   sudo apt install python3-pip
   pip3 install ansible-modules-hashivault
+  ```
 
 Installs and configures Certbot (for Let's Encrypt)
 
+  ```bash 
   ansible-galaxy install geerlingguy.certbot
+  ```
 
 Role Variables
 --------------
 
-ansible_user: "ubuntu" os username
-vault_version:
-vault_work_dir:
-vault_domains: 
-vault_url:
-vault_releases_url:
-vault_dashboard_secret_engine:
-vault_promo_secret_engine:
-vault_socket_secret_engine:
-vault_certs_secret_engine:
-vault_sshkeys_secret_engine:
-vault_starage_type: "raft" or "file"
-certbot_admin_email:
-domains:
-ansible_ssh_private_key_file:
-vault_policy_devops: ""
-vault_policy_servers: ""
-vault_policy_pipeline: ""
-vault_policy_dev: ""
-vault_policy_admin: ""
-vault_authtype:
-default_lease_ttl:
-max_lease_ttl:
-cluster_name: ""
-tls_cert_file: ""
-tls_key_file: ""
-ui: "true"
-disable_cache: "true"
-disable_mlock: "true"
-vault_users_devops:
-vault_users_servers:
-vault_users_dev:
-unseal_keys: []
-devops_id: []
-servers_id: []
-dev_id: []
-certbot_auto_renew:
-certbot_create_if_missing:
-certbot_create_method:
-certbot_create_standalone_stop_services: []
+| Name | Value |
+| --- | --- |
+| ansible_user | ubuntu | 
+| vault_version | 1.7.1 |
+| vault_work_dir | vault |
+| vault_domains | vault.example.com |
+| vault_dashboard_secret_engine | home.example.com |
+| vault_promo_secret_engine | www.example.com |
+| vault_socket_secret_engine | socket.example.com |
+| vault_certs_secret_engine | certs |
+| vault_sshkeys_secret_engine | sshkeys |
+| vault_starage_type | raft |
+| certbot_admin_email | admin@example.com |
+| certbot_certs | vault.example.com |
+| ansible_ssh_private_key_file | path_to_private_ssh_keys |
+| vault_users_devops | devops |
+| vault_users_servers | servers |
+| vault_users_dev | dev |
 
 Dependencies
 ------------
@@ -83,7 +65,7 @@ Example Playbook
     - hosts: localhost
       become: True
       vars:
-        ansible_user: "ubuntu"
+        ansible_user: ""
         vault_version: ""
         vault_work_dir: ""
         vault_domains: "{{ vault_domains }}"
@@ -92,7 +74,7 @@ Example Playbook
         vault_socket_secret_engine: ""
         vault_certs_secret_engine: ""
         vault_sshkeys_secret_engine: ""
-        vault_starage_type: "raft"
+        vault_starage_type: ""
         certbot_admin_email: ""
         certbot_certs:
           - domains:
